@@ -41,7 +41,9 @@ Or grab the latest build from our [Release Page](https://github.com/microsoft/co
 ## Shell conflicts
 
 > [!NOTE]
-> Any command not mentioned is included in this suite. The following only lists conflicts.
+> Any command not mentioned is included in this suite. You can remove additional commands using
+> `coreutils-manager remove <utility name>` and restore them with `coreutils-manager enable <utility name>`.
+> See `coreutils-manager --help` for other management commands. The following only lists conflicts.
 
 > [!WARNING]
 > PowerShell 7.4 or later is required.

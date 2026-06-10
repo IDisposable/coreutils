@@ -5,6 +5,7 @@
 // Microsoft-authored changes, which Microsoft makes available to uutils
 // under the uutils MIT License for upstream incorporation. See NOTICE.md.
 
+mod manager;
 mod nthelpers;
 
 use std::borrow::Cow;

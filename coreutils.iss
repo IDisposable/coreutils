@@ -82,6 +82,21 @@ var
     g_PowerShellExecutionPolicy: String;
     g_HasSupportedPowerShellExecutionPolicy: Boolean;
 
+function IsDisabledAlias(const Name: String; const DisabledAliases: TArrayOfString): Boolean;
+var
+    I: Integer;
+begin
+    Result := False;
+    for I := 0 to GetArrayLength(DisabledAliases) - 1 do
+    begin
+        if CompareText(Name, Trim(DisabledAliases[I])) = 0 then
+        begin
+            Result := True;
+            Exit;
+        end;
+    end;
+end;
+
 procedure InitializeGlobals;
 begin
     g_AppDirPath := ExpandConstant('{app}\');
@@ -93,6 +108,7 @@ end;
 procedure CreateHardlinks;
 var
     Output: TExecOutput;
+    DisabledAliases: TArrayOfString;
     Name: String;
     ResultCode, I: Integer;
 begin
@@ -102,10 +118,18 @@ begin
     if (not ExecAndCaptureOutput(g_CoreutilsExePath, '--list', '', SW_SHOWNORMAL, ewWaitUntilTerminated, ResultCode, Output)) or (ResultCode <> 0) then
         RaiseException('Failed to execute coreutils.exe --list');
 
+    SetArrayLength(DisabledAliases, 0);
+    RegQueryMultiStringValue(HKLM, 'SOFTWARE\Microsoft\coreutils', 'DisabledAliases', DisabledAliases);
+
     for I := 0 to GetArrayLength(Output.StdOut) - 1 do
     begin
         Name := Trim(Output.StdOut[I]);
-        if (Name <> '') and (Name <> '[') then
+        if Name = 'coreutils-manager' then
+        begin
+            if not CreateHardLink(g_AppBinDirPath + Name + '.exe', g_CoreutilsExePath, 0) then
+                RaiseException('Failed to create hardlink for ' + Name);
+        end
+        else if (Name <> '') and (Name <> '[') and (not IsDisabledAlias(Name, DisabledAliases)) then
         begin
             if not CreateHardLink(g_AppBinDirPath + Name + '.exe', g_CoreutilsExePath, 0) then
                 RaiseException('Failed to create hardlink for ' + Name);
@@ -113,6 +137,7 @@ begin
                 RaiseException('Failed to create hardlink for ' + Name);
         end;
     end;
+
 end;
 
 procedure ModifyPath(Install: Boolean);

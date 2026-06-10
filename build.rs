@@ -61,6 +61,11 @@ fn generate_uutils_map() {
         entries.push(("sort".into(), "(sort_uumain, sort_uu_app)".into()));
     }
 
+    entries.push((
+        "coreutils-manager".into(),
+        "(manager::uumain, manager::uu_app)".into(),
+    ));
+
     entries.sort();
 
     let mut phf_map = phf_codegen::OrderedMap::new();
@@ -68,9 +73,19 @@ fn generate_uutils_map() {
         phf_map.entry(name.as_str(), value.as_str());
     }
 
+    let utility_names = entries
+        .iter()
+        .map(|(name, _)| format!("    {name:?},\n"))
+        .collect::<String>();
+
     let code = format!(
         "\
 type UtilityMap<T> = phf::OrderedMap<&'static str, (fn(T) -> i32, fn() -> Command)>;
+
+fn utility_names() -> &'static [&'static str] {{
+&[
+{utility_names}]
+}}
 
 #[allow(clippy::too_many_lines)]
 #[allow(clippy::unreadable_literal)]
